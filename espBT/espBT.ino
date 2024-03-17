@@ -18,7 +18,7 @@ char buf[9];
 void setup() {
     Serial.begin(115200);
     Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
-    SerialBT.begin("2271ESP32_t1"); //Bluetooth device name
+    SerialBT.begin("2271ESP32_grp1"); //Bluetooth device name
     Serial.println("The device started, now you can pair it with bluetooth!");
 }
 
@@ -40,26 +40,54 @@ void loop() {
         char cc = command[0];
         switch(cc) {
             case 'w':
-                Serial.println(0x11);
+                Serial2.write(0x11);
                 break;
             case 'a':
-                Serial.println(0x12);
+                Serial2.write(0x12);
                 break;
             case 's':
-                Serial.println(0x13);
+                Serial2.write(0x13);
                 break;
             case 'd':
-                Serial.println(0x14);
+                Serial2.write(0x14);
                 break;
             case 'e':
-                Serial.println(0x15);
+                Serial2.write(0x15);
                 break;
             case 'i':
-                Serial.println(0x16);
+                Serial2.write(0x16);
                 break;
             case 'k':
-                Serial.println(0x15);
+                Serial2.write(0x17);
                 break;
         }
     }
+    
+    // char command = Serial.read();
+    // SerialBT.println(command);
+    // char cc = command[0];
+    // switch(cc) {
+    //         case 'w':
+    //             SerialBT.println(0x11);
+    //             break;
+    //         case 'a':
+    //             SerialBT.println(0x12);
+    //             break;
+    //         case 's':
+    //             SerialBT.println(0x13);
+    //             break;
+    //         case 'd':
+    //             SerialBT.println(0x14);
+    //             break;
+    //         case 'e':
+    //             SerialBT.println(0x15);
+    //             break;
+    //         case 'i':
+    //             SerialBT.println(0x16);
+    //             break;
+    //         case 'k':
+    //             SerialBT.println(0x15);
+    //             break;
+    // }
 }
+

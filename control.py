@@ -2,13 +2,16 @@ import sys
 from pynput import keyboard
 import serial
 
-ser  = serial.Serial('COM8', 115200, timeout=1)
+ser  = serial.Serial('COM7', 115200, timeout=1)
 
 keys_state = {}
-
 motion_keys_stack = [] 
 
+level = 2
+
 def on_press(key):
+    global level
+    
     if key == keyboard.Key.esc:
         return False
 
@@ -29,10 +32,16 @@ def on_press(key):
             motion_keys_stack.append(key_char)
     
     if key_char == 'i':
-        print("accelerate")
+        if level <= 3:
+            level = level +1
+
+        print("accelerating, level: " +str(level))
         ser.write(f"i\n".encode())
     if key_char == 'k':
-        print("slow")
+        if level >= 1:
+            level = level -1
+
+        print("slowing down, level: " +str(level))
         ser.write(f"k\n".encode())
 
 def on_release(key):
@@ -56,6 +65,7 @@ def on_release(key):
         else:
             motion_keys_stack.remove(key_char)
 
+level = 2
 with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
     listener.join()
 
