@@ -40,8 +40,9 @@
  * Application main thread
  *---------------------------------------------------------------------------*/
 
-volatile int moving_status = 0;
-volatile double gear_multiplier[4] = {0.5, 0.8, 1, 1.2};
+volatile int moving_status = 1;
+volatile int task_status = 0;
+volatile double gear_multiplier[4] = {0.2, 0.5, 0.8, 1.2};
 volatile int gear_level = 2;
 
 void InitGPIO(void)
@@ -181,6 +182,7 @@ void initPWM(void)     // Defines a function named initPWM that takes no argumen
 
 void UART2_IRQHandler(void) {
     if (UART2->S1 & UART_S1_RDRF_MASK) {
+			  moving_status = 1 - moving_status;
         uint8_t instruction = UART2->D;
         switch (instruction)
         {
@@ -195,20 +197,20 @@ void UART2_IRQHandler(void) {
             TPM0_C5V = 0.5 * TPM0_MOD * gear_multiplier[gear_level];  //50% duty 
             TPM0_C2V = 0;
             TPM0_C3V = 0;
-            TPM0_C4V = 0;
+            TPM0_C4V = 0.5 * TPM0_MOD * gear_multiplier[gear_level];
             moving_status = 1;
             break;
           case 0x13: //s, move backward
             TPM0_C5V = 0;
             TPM0_C2V = 0.75 * TPM0_MOD * gear_multiplier[gear_level];  //75% duty
             TPM0_C3V = 0;
-            TPM0_C4V = 0.75 * TPM0_MOD  * gear_multiplier[gear_level];
+            TPM0_C4V = 0.75 * TPM0_MOD * gear_multiplier[gear_level];
             moving_status = 1;
             break;
           case 0x14: //d, move right
             TPM0_C5V = 0;
-            TPM0_C2V = 0;
-            TPM0_C3V = 0.5 * TPM0_MOD  * gear_multiplier[gear_level];  //50% duty
+            TPM0_C2V = 0.5 * TPM0_MOD * gear_multiplier[gear_level];
+            TPM0_C3V = 0.5 * TPM0_MOD * gear_multiplier[gear_level];  //50% duty
             TPM0_C4V = 0;
             moving_status = 1;
             break;
@@ -218,6 +220,7 @@ void UART2_IRQHandler(void) {
             TPM0_C3V = 0;
             TPM0_C4V = 0;
             moving_status = 0;
+					  break;
           case 0x16: //gear up
             if (gear_level < 3)
               gear_level++;
@@ -353,8 +356,9 @@ static void Delay(void) {
     initPWM();
     initUART2(BAUD_RATE);
 	  InitGPIO();
-
-    TPM0_C5V = 0;
+    
+    // Initialise all the CV values to 0
+    TPM0_C5V = 0;  
     TPM0_C2V = 0;
     TPM0_C3V = 0;
     TPM0_C5V = 0;
