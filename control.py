@@ -2,7 +2,7 @@ import sys
 from pynput import keyboard
 import serial
 
-ser  = serial.Serial('COM7', 115200, timeout=1)
+ser  = serial.Serial('COM8', 115200, timeout=1)
 
 keys_state = {}
 motion_keys_stack = [] 
@@ -37,12 +37,22 @@ def on_press(key):
 
         print("accelerating, level: " +str(level))
         ser.write(f"i\n".encode())
+
     if key_char == 'k':
         if level >= 1:
             level = level -1
 
         print("slowing down, level: " +str(level))
         ser.write(f"k\n".encode())
+
+    if key_char == 'p':
+        print("final stop")
+        ser.write(f"p\n".encode())
+
+    if key_char == 'r':
+        print("correct music")
+        ser.write(f"r\n".encode())
+
 
 def on_release(key):
     try:
