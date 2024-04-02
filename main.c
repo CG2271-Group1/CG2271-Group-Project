@@ -13,6 +13,11 @@
 #define TPM0_MOD 7500
 #define TPM1_MOD 7500
 
+// Define the KL25Z LED
+#define RED_LED  18 // PortB Pin 18 
+#define GREEN_LED       19 // PortB Pin 19 
+#define BLUE_LED       1 // PortD Pin 1 
+
 // Define the UART pin numbers
 #define UART_RX_PORTE23 23
 #define UART_INIT_PRIO 128
@@ -41,8 +46,9 @@
  *---------------------------------------------------------------------------*/
 
 volatile int moving_status = 0;
+// This part is to initialise the gear system
 volatile double gear_multiplier[4] = {0.2, 0.5, 0.8, 1.2};
-volatile double rl_turn[4] = {0.5, 0.7, 0.9, 1.2};
+volatile double rl_turn[4] = {0.5, 0.7, 0.8, 0.9};
 volatile int gear_level = 2;
 
 // This part is for the audio information
@@ -60,6 +66,17 @@ void InitGPIO(void)
 {
 	// Enable Clock to PORTC
 	SIM->SCGC5 |= SIM_SCGC5_PORTC_MASK;
+
+	// Configure MUX settings to make all 3 pins GPIO 
+  
+	PORTB->PCR[RED_LED] &= ~PORT_PCR_MUX_MASK; 
+	PORTB->PCR[RED_LED] |= PORT_PCR_MUX(1); 
+	
+	PORTB->PCR[GREEN_LED] &= ~PORT_PCR_MUX_MASK; 
+	PORTB->PCR[GREEN_LED] |= PORT_PCR_MUX(1); 
+	
+	PORTD->PCR[BLUE_LED] &= ~PORT_PCR_MUX_MASK; 
+	PORTD->PCR[BLUE_LED] |= PORT_PCR_MUX(1); 
 	
 	// Configure MUX settings to make all pins GPIO
 	PORTC->PCR[FRONT_LED_1] &= ~PORT_PCR_MUX_MASK;
@@ -85,11 +102,15 @@ void InitGPIO(void)
 	PORTC->PCR[BACK_LED] &= ~PORT_PCR_MUX_MASK;
 	PORTC->PCR[BACK_LED] |= PORT_PCR_MUX(1);
 
-	// Set Data Direction Registers for PortB and PortD
+	// Set Data Direction Registers for Port C
 	PTC->PDDR |= (MASK(FRONT_LED_1) | MASK(FRONT_LED_2) | MASK(FRONT_LED_3) | MASK(FRONT_LED_4) | MASK(FRONT_LED_5) | 
 								MASK(FRONT_LED_6) | MASK(FRONT_LED_7) | MASK(FRONT_LED_8) | MASK(FRONT_LED_9) | MASK(FRONT_LED_10) | 
 								MASK(BACK_LED) );
-}
+	
+	 // Set Data Direction Registers for PortB and PortD 
+	PTB->PDDR |= (MASK(RED_LED) | MASK(GREEN_LED)); 
+	PTD->PDDR |= MASK(BLUE_LED); 
+	}
 
 void initUART2(uint32_t baud_rate)
 {
@@ -415,7 +436,29 @@ void buzzer (void *argument) {
 	} 
 }
 
- int main (void) {
+void offRGB(void)
+{
+	PTB->PSOR = (MASK(RED_LED) | MASK(GREEN_LED));
+	PTD->PSOR = MASK(BLUE_LED);
+}
+
+void blinky(void *argument)
+{
+	for(;;)
+	{
+		offRGB();
+		PTB->PDOR &= ~MASK(RED_LED);
+		osDelay(400);
+		offRGB();
+		osDelay(100);
+		PTD->PDOR &= ~MASK(BLUE_LED);
+		osDelay(400);
+		offRGB();
+		osDelay(100);
+	}
+}
+
+int main (void) {
 
     SystemCoreClockUpdate();
     initPWM();
@@ -429,9 +472,10 @@ void buzzer (void *argument) {
     TPM0_C5V = 0;
   
     osKernelInitialize();                 // Initialize CMSIS-RTOS
-    osThreadNew(front_led, NULL, NULL);    // Create application main thread
-	  osThreadNew(buzzer, NULL, NULL);      // Create application main thread
-    osThreadNew(back_led, NULL, NULL);    // Create application main thread
+	  osThreadNew(blinky, NULL, NULL);    // Create kl25z blinky thread
+    osThreadNew(front_led, NULL, NULL);    // Create front led thread
+	  osThreadNew(buzzer, NULL, NULL);      // Create buzzer thread
+    osThreadNew(back_led, NULL, NULL);    // Create back led thread
     osKernelStart();                      // Start thread execution
     for (;;) {}
 }
