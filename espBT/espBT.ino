@@ -32,6 +32,8 @@ void setup() {
     0101 stop
     0110 accelerate
     0111 slow down
+
+0x21 : final stop
 */
 void loop() {
     if(SerialBT.available()) {
@@ -59,6 +61,12 @@ void loop() {
                 break;
             case 'k':
                 Serial2.write(0x17);
+                break;
+            case 'p':
+                Serial2.write(0x21);
+                break;
+            case 'r':
+                Serial2.write(0x22);
                 break;
         }
     }
