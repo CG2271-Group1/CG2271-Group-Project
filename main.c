@@ -48,7 +48,7 @@
 volatile int moving_status = 0;
 // This part is to initialise the gear system
 volatile double gear_multiplier[4] = {0.2, 0.5, 0.8, 1.2};
-volatile double rl_turn[4] = {0.5, 0.7, 0.8, 0.9};
+volatile double rl_turn[4] = {0.5, 0.7, 0.7, 0.7};
 volatile int gear_level = 2;
 
 // This part is for the audio information
@@ -396,13 +396,6 @@ int freq_2_MOD(int freq)
 	if (freq == 0)
 		return 0;
 	return CLOCK_FREQ/PRE_SCALAR/freq;
-}
-
-static void Delay(void) {
-    volatile unsigned int a;
-    for (a=0; a < 4000000; a++) {
-        __NOP(); 
-    }
 }
 
 void buzzer (void *argument) {
